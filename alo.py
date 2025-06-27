@@ -835,7 +835,7 @@ class DBManager:
                 raise ValueError("MONGODB_PASSWORD environment variable is not set")
 
             # MongoDB Atlas connection string with password from environment variable
-            uri = f"mongodb+srv://junwoo0755:<db_password>@gonzalolkor.d5lrr.mongodb.net/?retryWrites=true&w=majority&appName=GonzaloLKor"
+            uri = f"mongodb+srv://junwoo0755:{mongodb_password}@gonzalolkor.d5lrr.mongodb.net/?retryWrites=true&w=majority&appName=GonzaloLKor"
 
             # Connect to MongoDB
             self.client = MongoClient(uri)
