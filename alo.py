@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import os
 import re
 from typing import List, Dict, Optional, Union, Any
-from langchain_cohere import ChatCohere
+from langchain_anthropic import ChatAnthropic
 import traceback
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage, SystemMessage
@@ -195,8 +195,8 @@ class QuestionOutput(BaseModel):
 
 class QuestionGenerator:
     def __init__(self):
-        self.llm = ChatCohere(
-            model="c4ai-aya-expanse-32b",  # Using the correct model name
+        self.llm = ChatAnthropic(
+            model="claude-3-5-haiku-20241022",  # Using the correct model name
             temperature=0.6,
             max_tokens=2000
         )
@@ -549,7 +549,8 @@ class QuestionGenerator:
                 "1번 선택지 (한글)",
                 "2번 선택지 (한글)",
                 "3번 선택지 (한글)",
-                "4번 선택지 (한글)"
+                "4번 선택지 (한글)",
+                "5번 선택지 (한글)"
             ],
             "correct_answer": 1,
             "explanation": "자세한 설명 (한글)",
@@ -561,13 +562,14 @@ class QuestionGenerator:
             "wrong_answer_analysis": {{
                 "2": "2번 오답 분석",
                 "3": "3번 오답 분석",
-                "4": "4번 오답 분석"
+                "4": "4번 오답 분석",  
+                "5": "5번 오답 분석"
             }}
         }}
 
         Requirements:
         - All text must be in Korean
-        - correct_answer must be a number between 1 and 4
+        - correct_answer must be a number between 1 and 5
         - difficulty must be a number between 1 and 5
         - key_points must be an array of strings
         - wrong_answer_analysis must be an object with numbers as keys
@@ -695,9 +697,9 @@ class PDFParser:
                 HumanMessage(content=f"Please extract and clean the English passages from this PDF content:\n\n{raw_text}")
             ]
 
-            chat = ChatCohere(
+            chat = ChatAnthropic(
                 temperature=0,
-                model="c4ai-aya-expanse-32b"
+                model="claude-3-5-haiku-20241022"
             )
 
             response = chat.invoke(messages)
@@ -833,7 +835,7 @@ class DBManager:
                 raise ValueError("MONGODB_PASSWORD environment variable is not set")
 
             # MongoDB Atlas connection string with password from environment variable
-            uri = f"mongodb+srv://enverlee:{mongodb_password}@ssalmuk.h18e3.mongodb.net/?retryWrites=true&w=majority&appName=ssalmuk"
+            uri = f"mongodb+srv://junwoo0755:<db_password>@gonzalolkor.d5lrr.mongodb.net/?retryWrites=true&w=majority&appName=GonzaloLKor"
 
             # Connect to MongoDB
             self.client = MongoClient(uri)
