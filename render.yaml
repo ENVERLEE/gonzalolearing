@@ -16,6 +16,9 @@ services:
       - key: MYSQL_PASSWORD
         generateValue: true
     numInstances: 1
+    healthCheckPath: /
+    # MySQL은 내부 네트워크에서만 접근 가능하도록 설정
+    # HTTP 포트는 health check용으로만 사용
 
   # Spring Boot 백엔드
   - type: web
