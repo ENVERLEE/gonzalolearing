@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leareng - 영어 문제 생성기</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Leareng</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userEmail"></span>
+                <button id="logoutBtn" class="btn-secondary">로그아웃</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <div class="subscription-section">
+                    <h2>구독하기</h2>
+                    <button id="subscribeBtn" class="btn-primary">프리미엄 구독 신청</button>
+                    <div id="subscriptionStatus"></div>
+                </div>
+            </aside>
+
+            <main class="content-area">
+                <div id="mainApp">
+                    <div class="mode-tabs">
+                        <button class="tab-btn active" data-mode="edit">편집 모드</button>
+                        <button class="tab-btn" data-mode="study">학습 모드</button>
+                    </div>
+
+                    <!-- 편집 모드 -->
+                    <div id="editMode" class="mode-content">
+                        <h2>편집 모드</h2>
+                        
+                        <!-- 저장된 지문 목록 -->
+                        <section class="section">
+                            <h3>저장된 지문 목록</h3>
+                            <div id="savedPassages"></div>
+                        </section>
+
+                        <div class="divider"></div>
+
+                        <!-- PDF 업로드 -->
+                        <section class="section">
+                            <h3>PDF 업로드</h3>
+                            <input type="file" id="pdfUpload" accept=".pdf">
+                            <div id="pdfPassages"></div>
+                        </section>
+
+                        <div class="divider"></div>
+
+                        <!-- 지문 직접 입력 -->
+                        <section class="section">
+                            <h3>지문 직접 입력</h3>
+                            <textarea id="manualPassage" rows="10" placeholder="영어 지문을 입력하세요"></textarea>
+                            <input type="text" id="manualTitle" placeholder="지문 제목">
+                            <button id="savePassageBtn" class="btn-primary">저장</button>
+                            <button id="generateQuestionsBtn" class="btn-primary">문제 생성</button>
+                        </section>
+                    </div>
+
+                    <!-- 학습 모드 -->
+                    <div id="studyMode" class="mode-content" style="display: none;">
+                        <h2>학습 모드</h2>
+                        <div id="studyContent"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 로딩 오버레이 -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">처리 중...</div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/question-generator.js"></script>
+    <script src="js/study-mode.js"></script>
+</body>
+</html>
+
