@@ -15,20 +15,25 @@ const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
         // Render, Railway 등에서 백엔드가 다른 서브도메인에 있는 경우
-        // 환경 변수로 백엔드 URL을 설정하거나
-        // 같은 포트에서 프록시를 사용하는 경우를 대비
+        // 백엔드 URL을 추론 (일반적인 패턴)
         
-        // 같은 호스트의 /api 경로 사용 (Nginx 프록시 설정 시)
-        if (window.location.pathname === '/' || window.location.pathname.startsWith('/index')) {
-            return '/api';
+        // Render: leareng-backend.onrender.com
+        if (hostname.includes('onrender.com')) {
+            const frontendName = hostname.split('.')[0];
+            const backendName = frontendName.replace('-frontend', '-backend');
+            return `https://${backendName}.onrender.com/api`;
         }
         
-        // 백엔드가 별도 도메인인 경우 (예: backend.onrender.com)
-        // 이 경우 환경 변수로 설정해야 함
-        // 기본값으로 같은 호스트의 8080 포트 시도
-        const protocol = window.location.protocol;
-        const port = window.location.port ? `:${window.location.port}` : '';
-        return `${protocol}//${hostname}${port}/api`;
+        // Railway: *.up.railway.app
+        if (hostname.includes('railway.app')) {
+            // Railway는 각 서비스가 다른 도메인을 가지므로
+            // 환경 변수로 설정해야 함
+            // 기본값으로 같은 호스트 시도
+            return `${window.location.protocol}//${hostname}/api`;
+        }
+        
+        // 일반적인 경우: 같은 호스트의 /api 경로 시도
+        return '/api';
     }
     
     // 4. 로컬 개발 환경

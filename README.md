@@ -72,7 +72,19 @@ CREATE DATABASE leareng CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ## 실행 방법
 
-### Docker를 사용한 실행 (권장)
+### 🚀 원클릭 웹 배포
+
+프로젝트를 웹에 배포하려면 **[DEPLOY.md](./DEPLOY.md)** 파일을 참조하세요.
+
+**Render를 사용한 원클릭 배포 (추천):**
+1. [Render.com](https://render.com)에 가입
+2. GitHub 저장소 연결
+3. Blueprint 배포 선택 → `render.yaml` 자동 감지
+4. 환경 변수 설정 → 배포 완료!
+
+자세한 내용은 [DEPLOY.md](./DEPLOY.md)를 확인하세요.
+
+### Docker를 사용한 로컬 실행
 
 ```bash
 docker-compose up -d

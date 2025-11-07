@@ -1,10 +1,21 @@
 services:
-  # MySQL 데이터베이스
-  - type: pspg
+  # MySQL 데이터베이스 (Docker 이미지 사용)
+  - type: web
     name: leareng-mysql
+    env: docker
+    dockerfilePath: ./mysql/Dockerfile
+    dockerContext: ./mysql
     plan: starter
-    databaseName: leareng
-    databaseUser: leareng
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: leareng
+      - key: MYSQL_USER
+        value: leareng
+      - key: MYSQL_PASSWORD
+        generateValue: true
+    numInstances: 1
 
   # Spring Boot 백엔드
   - type: web
@@ -14,18 +25,12 @@ services:
     dockerContext: ./backend
     plan: starter
     envVars:
-      - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: leareng-mysql
-          property: connectionString
       - key: DB_USERNAME
-        fromDatabase:
-          name: leareng-mysql
-          property: user
+        value: leareng
       - key: DB_PASSWORD
-        fromDatabase:
-          name: leareng-mysql
-          property: password
+        sync: false  # MySQL 서비스의 MYSQL_PASSWORD와 동일한 값으로 수동 설정 필요
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://leareng-mysql:3306/leareng?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - key: EMAIL_ADDRESS
         sync: false
       - key: EMAIL_PASSWORD
@@ -34,6 +39,12 @@ services:
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          name: leareng-frontend
+          type: web
+          property: host
+          format: https://${host}
     healthCheckPath: /api/auth/login
 
   # Nginx 프론트엔드

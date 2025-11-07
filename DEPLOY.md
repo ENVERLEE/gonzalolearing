@@ -2,37 +2,49 @@
 
 이 프로젝트를 웹에 배포하는 방법을 안내합니다. **Railway**와 **Render** 두 가지 플랫폼을 지원합니다.
 
-## 🚀 방법 1: Render 배포 (추천)
+## 🚀 방법 1: Render 배포 (추천) - 원클릭 배포
 
-Render는 Docker Compose를 지원하며, 무료 티어를 제공합니다.
+Render는 Docker Compose를 지원하며, 무료 티어를 제공합니다. **가장 간단한 원클릭 배포 방법**입니다.
 
 ### 1단계: Render 계정 생성
 1. [Render.com](https://render.com)에 가입
 2. GitHub 계정으로 로그인
 
-### 2단계: 새 Blueprint 배포
+### 2단계: 새 Blueprint 배포 (원클릭!)
 1. Render 대시보드에서 **"New +"** 클릭
 2. **"Blueprint"** 선택
 3. GitHub 저장소 연결
 4. 저장소에서 `render.yaml` 파일을 자동으로 감지
 5. **"Apply"** 클릭
+6. 환경 변수만 설정하면 자동 배포 시작!
 
 ### 3단계: 환경 변수 설정
-배포 후 각 서비스의 환경 변수를 설정하세요:
+배포가 시작되면 각 서비스의 환경 변수를 설정하세요:
 
-**Backend 서비스:**
-- `EMAIL_ADDRESS`: Gmail 주소
-- `EMAIL_PASSWORD`: Gmail 앱 비밀번호
-- `JWT_SECRET_KEY`: 최소 32자 이상의 랜덤 문자열 (자동 생성됨)
+**MySQL 서비스 (leareng-mysql):**
+- `MYSQL_ROOT_PASSWORD`: 자동 생성됨 (또는 수동 설정)
+- `MYSQL_PASSWORD`: 자동 생성됨 (또는 수동 설정) - **이 값을 복사해두세요!**
+- `MYSQL_DATABASE`: `leareng` (자동 설정)
+- `MYSQL_USER`: `leareng` (자동 설정)
+
+**Backend 서비스 (leareng-backend):**
+- `EMAIL_ADDRESS`: Gmail 주소 (예: `your-email@gmail.com`)
+- `EMAIL_PASSWORD`: Gmail 앱 비밀번호 ([생성 방법](#gmail-앱-비밀번호-생성-방법))
+- `DB_PASSWORD`: **MySQL 서비스의 `MYSQL_PASSWORD`와 동일한 값으로 설정** (중요!)
+- `JWT_SECRET_KEY`: 자동 생성됨 (또는 수동으로 최소 32자 이상의 랜덤 문자열)
 - `OPENAI_API_KEY`: OpenAI API 키
 
-**Frontend 서비스:**
-- `API_BASE_URL`: 백엔드 서비스 URL (예: `https://leareng-backend.onrender.com/api`)
+**Frontend 서비스 (leareng-frontend):**
+- `BACKEND_URL`: 자동 설정됨 (수동 설정 불필요)
+
+**참고:** `CORS_ALLOWED_ORIGINS`는 자동으로 프론트엔드 URL로 설정됩니다.
 
 ### 4단계: 배포 완료
 배포가 완료되면 각 서비스에 고유한 URL이 생성됩니다:
 - Frontend: `https://leareng-frontend.onrender.com`
 - Backend: `https://leareng-backend.onrender.com`
+
+프론트엔드에서 백엔드 API를 자동으로 감지하여 연결합니다!
 
 ---
 
@@ -144,19 +156,25 @@ server {
 
 ## 📝 환경 변수 설명
 
-| 변수명 | 설명 | 필수 |
-|--------|------|------|
-| `EMAIL_ADDRESS` | Gmail 주소 (이메일 인증용) | ✅ |
-| `EMAIL_PASSWORD` | Gmail 앱 비밀번호 | ✅ |
-| `JWT_SECRET_KEY` | JWT 토큰 서명 키 (최소 32자) | ✅ |
-| `OPENAI_API_KEY` | OpenAI API 키 | ✅ |
-| `API_BASE_URL` | 백엔드 API URL (프론트엔드만) | ✅ |
+| 변수명 | 설명 | 필수 | 자동 설정 |
+|--------|------|------|----------|
+| `EMAIL_ADDRESS` | Gmail 주소 (이메일 인증용) | ✅ | ❌ |
+| `EMAIL_PASSWORD` | Gmail 앱 비밀번호 | ✅ | ❌ |
+| `JWT_SECRET_KEY` | JWT 토큰 서명 키 (최소 32자) | ✅ | ✅ (Render) |
+| `OPENAI_API_KEY` | OpenAI API 키 | ✅ | ❌ |
+| `CORS_ALLOWED_ORIGINS` | CORS 허용 Origin | ❌ | ✅ (Render) |
+| `BACKEND_URL` | 백엔드 API URL (프론트엔드) | ❌ | ✅ (Render) |
+| `SPRING_DATASOURCE_URL` | 데이터베이스 연결 URL | ✅ | ✅ (Render) |
+| `DB_USERNAME` | 데이터베이스 사용자명 | ✅ | ✅ (Render) |
+| `DB_PASSWORD` | 데이터베이스 비밀번호 | ✅ | ✅ (Render) |
 
 ### Gmail 앱 비밀번호 생성 방법
-1. Google 계정 설정 → 보안
-2. 2단계 인증 활성화
-3. 앱 비밀번호 생성
-4. 생성된 비밀번호를 `EMAIL_PASSWORD`에 사용
+1. [Google 계정 설정](https://myaccount.google.com/) → 보안
+2. **2단계 인증** 활성화 (필수)
+3. **앱 비밀번호** 생성
+   - "앱 선택" → "메일" 선택
+   - "기기 선택" → "기타(맞춤 이름)" 선택 후 "Leareng" 입력
+4. 생성된 16자리 비밀번호를 `EMAIL_PASSWORD`에 사용
 
 ---
 
