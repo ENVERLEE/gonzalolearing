@@ -60,8 +60,4 @@ services:
           name: leareng-backend
           type: web
           property: host
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
