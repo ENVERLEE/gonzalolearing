@@ -1,0 +1,56 @@
+services:
+  # MySQL 데이터베이스
+  - type: pspg
+    name: leareng-mysql
+    plan: starter
+    databaseName: leareng
+    databaseUser: leareng
+
+  # Spring Boot 백엔드
+  - type: web
+    name: leareng-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: leareng-mysql
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: leareng-mysql
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: leareng-mysql
+          property: password
+      - key: EMAIL_ADDRESS
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+    healthCheckPath: /api/auth/login
+
+  # Nginx 프론트엔드
+  - type: web
+    name: leareng-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: starter
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          name: leareng-backend
+          type: web
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+

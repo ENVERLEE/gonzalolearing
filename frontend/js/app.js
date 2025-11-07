@@ -10,40 +10,76 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userEmail').textContent = userEmail;
     document.getElementById('userInfo').style.display = 'flex';
 
+    // Show admin link if admin
+    if (authManager.isAdmin) {
+        document.getElementById('adminLink').style.display = 'inline-block';
+    }
+
     // Logout handler
     document.getElementById('logoutBtn').addEventListener('click', () => {
         authManager.logout();
     });
 
-    // Mode tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.mode-content').forEach(c => c.style.display = 'none');
-            
-            btn.classList.add('active');
             const mode = btn.dataset.mode;
-            document.getElementById(mode + 'Mode').style.display = 'block';
+            switchMode(mode);
         });
     });
 
-    // Load subscription status
+    // Create tab switching
+    document.querySelectorAll('.create-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            switchCreateTab(tab);
+        });
+    });
+
+    // Load initial data
     loadSubscriptionStatus();
-
-    // Load saved passages
     loadSavedPassages();
-
-    // Add admin link if admin
-    if (authManager.isAdmin) {
-        const userInfo = document.getElementById('userInfo');
-        const adminLink = document.createElement('a');
-        adminLink.href = 'admin.html';
-        adminLink.textContent = '관리자';
-        adminLink.style.marginRight = '10px';
-        adminLink.style.color = '#007AFF';
-        userInfo.insertBefore(adminLink, userInfo.firstChild);
-    }
+    updateStats();
 });
+
+function switchMode(mode) {
+    // Update mode buttons
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+
+    // Update mode panels
+    document.querySelectorAll('.mode-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    const panelId = mode === 'study' ? 'studyMode' : 
+                   mode === 'create' ? 'createMode' : 'libraryMode';
+    document.getElementById(panelId).classList.add('active');
+
+    // Load content based on mode
+    if (mode === 'library') {
+        loadSavedPassages();
+    } else if (mode === 'study') {
+        // Load study content if needed
+        loadStudyPassages();
+    }
+}
+
+function switchCreateTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.create-tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+    // Update tab content
+    document.querySelectorAll('.create-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tab}Tab`).classList.add('active');
+}
 
 async function loadSubscriptionStatus() {
     try {
@@ -52,15 +88,22 @@ async function loadSubscriptionStatus() {
         
         if (status.isSubscribed) {
             statusEl.innerHTML = `
-                <div class="message success">
-                    <p>🌟 프리미엄 구독 활성화</p>
-                    <p>구독 만료일: ${new Date(status.expiryDate).toLocaleDateString()}</p>
+                <div class="status-badge success">
+                    <span class="badge-icon">✓</span>
+                    <div class="badge-content">
+                        <div class="badge-title">프리미엄 활성화</div>
+                        <div class="badge-subtitle">만료일: ${new Date(status.expiryDate).toLocaleDateString()}</div>
+                    </div>
                 </div>
             `;
         } else {
             statusEl.innerHTML = `
-                <div class="message info">
-                    <p>무료 버전 (남은 문제 수: ${status.remainingQuestions})</p>
+                <div class="status-badge info">
+                    <span class="badge-icon">ℹ</span>
+                    <div class="badge-content">
+                        <div class="badge-title">무료 버전</div>
+                        <div class="badge-subtitle">남은 문제: ${status.remainingQuestions}개</div>
+                    </div>
                 </div>
             `;
         }
@@ -75,19 +118,87 @@ async function loadSavedPassages() {
         const container = document.getElementById('savedPassages');
         
         if (passages.length === 0) {
-            container.innerHTML = '<p class="message info">저장된 지문이 없습니다.</p>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <h3>저장된 지문이 없습니다</h3>
+                    <p>지문 생성 모드에서 새로운 지문을 추가해보세요</p>
+                </div>
+            `;
             return;
         }
 
         container.innerHTML = passages.map(passage => `
             <div class="passage-card">
-                <h4>${passage.title}</h4>
-                <p>${passage.text.substring(0, 200)}...</p>
-                <button class="btn-primary" onclick="generateQuestionsForPassage(${passage.id})">문제 생성</button>
+                <div class="card-header">
+                    <h4>${escapeHtml(passage.title)}</h4>
+                    <span class="card-date">${new Date(passage.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div class="card-body">
+                    <p>${escapeHtml(passage.text.substring(0, 150))}${passage.text.length > 150 ? '...' : ''}</p>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-secondary" onclick="startStudy(${passage.id})">학습하기</button>
+                    <button class="btn-primary" onclick="generateQuestionsForPassage(${passage.id})">문제 생성</button>
+                </div>
             </div>
         `).join('');
+        
+        updateStats();
     } catch (error) {
         console.error('Failed to load passages:', error);
+    }
+}
+
+async function loadStudyPassages() {
+    try {
+        const passages = await api.get('/passages');
+        const container = document.getElementById('studyContent');
+        
+        if (passages.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <h3>학습할 지문을 선택하세요</h3>
+                    <p>지문 라이브러리에서 지문을 선택하여 학습을 시작하세요</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="study-passages-grid">
+                ${passages.map(passage => `
+                    <div class="study-passage-card" onclick="startStudy(${passage.id})">
+                        <div class="card-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                        </div>
+                        <h4>${escapeHtml(passage.title)}</h4>
+                        <p>${escapeHtml(passage.text.substring(0, 100))}${passage.text.length > 100 ? '...' : ''}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load study passages:', error);
+    }
+}
+
+function startStudy(passageId) {
+    // Switch to study mode and load questions
+    switchMode('study');
+    // This will be handled by study-mode.js
+    if (typeof loadQuestions === 'function') {
+        loadQuestions(passageId);
     }
 }
 
@@ -110,15 +221,31 @@ async function generateQuestionsForPassage(passageId) {
         hideLoading();
         alert('문제 생성이 완료되었습니다!');
         loadSavedPassages();
+        updateStats();
     } catch (error) {
         hideLoading();
         alert('오류: ' + error.message);
     }
 }
 
+async function updateStats() {
+    try {
+        const passages = await api.get('/passages');
+        document.getElementById('totalPassages').textContent = passages.length;
+        
+        // TODO: Get total questions count from API
+        document.getElementById('totalQuestions').textContent = '-';
+    } catch (error) {
+        console.error('Failed to update stats:', error);
+    }
+}
+
 function showLoading(text = '처리 중...') {
     const overlay = document.getElementById('loadingOverlay');
-    overlay.querySelector('.loading-text').textContent = text;
+    const textEl = overlay.querySelector('.loading-text');
+    if (textEl) {
+        textEl.textContent = text;
+    }
     overlay.style.display = 'flex';
 }
 
@@ -126,3 +253,8 @@ function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}

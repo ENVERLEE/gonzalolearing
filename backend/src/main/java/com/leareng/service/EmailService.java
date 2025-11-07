@@ -1,5 +1,7 @@
 package com.leareng.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,6 +14,8 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class EmailService {
     
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+    
     private final JavaMailSender mailSender;
     
     @Value("${spring.mail.username}")
@@ -23,6 +27,9 @@ public class EmailService {
     
     public void sendEmail(String to, String subject, String body) {
         try {
+            logger.info("Attempting to send email to: {} with subject: {}", to, subject);
+            logger.info("Using from email: {}", fromEmail);
+            
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
@@ -32,8 +39,13 @@ public class EmailService {
             helper.setText(body, true); // true indicates HTML
             
             mailSender.send(message);
+            logger.info("Email sent successfully to: {}", to);
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send email", e);
+            logger.error("MessagingException while sending email to {}: {}", to, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Unexpected error while sending email to {}: {}", to, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
     }
     

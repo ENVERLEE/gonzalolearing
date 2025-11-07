@@ -17,7 +17,7 @@ import java.util.Optional;
 @Service
 public class SubscriptionService {
     
-    private static final int FREE_QUESTION_LIMIT = 20;
+    private static final int FREE_QUESTION_LIMIT = 50;
     
     @Autowired
     private SubscriptionRepository subscriptionRepository;
