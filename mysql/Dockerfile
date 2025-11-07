@@ -1,9 +1,18 @@
 FROM mysql:8.0
 
-# Install Python for simple HTTP health check server
-RUN apt-get update && \
-    apt-get install -y python3 && \
-    rm -rf /var/lib/apt/lists/*
+# Check if Python is already available, if not install it
+# MySQL 8.0 images are based on Oracle Linux, use microdnf
+RUN if ! command -v python3 > /dev/null 2>&1; then \
+        if command -v microdnf > /dev/null 2>&1; then \
+            microdnf install -y python3 && microdnf clean all; \
+        elif command -v yum > /dev/null 2>&1; then \
+            yum install -y python3 && yum clean all; \
+        elif command -v apt-get > /dev/null 2>&1; then \
+            apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*; \
+        else \
+            echo "No package manager found, Python may not be available"; \
+        fi \
+    fi
 
 # Create a simple HTTP health check server
 RUN echo '#!/usr/bin/env python3\n\
